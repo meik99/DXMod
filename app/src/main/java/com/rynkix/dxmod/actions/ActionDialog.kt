@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,12 +30,14 @@ import com.rynkix.dxmod.ui.theme.Green80
 @Preview(showBackground = true)
 @Composable
 fun AddActionDialog(
+    action: Action? = null,
     onAddAction: (Action) -> Unit = {},
-    onDismissRequest: () -> Unit ={}
+    onDeleteAction: (uid: Int) -> Unit = {},
+    onDismissRequest: () -> Unit = {}
 ) {
-    var description = remember { mutableStateOf("") }
-    var equation = remember { mutableStateOf("") }
-    var tags = remember { mutableStateOf("") }
+    val description = remember { mutableStateOf(action?.description ?: "") }
+    val equation = remember { mutableStateOf(action?.equation ?: "") }
+    val tags = remember { mutableStateOf(action?.tags?.joinToString(",") ?: "") }
 
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -52,7 +55,7 @@ fun AddActionDialog(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "Add Action",
+                    text = if(action?.uid == null) "Add Action" else "Edit Action",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -100,8 +103,24 @@ fun AddActionDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.End,
                 ) {
+                    if (action?.uid != null) {
+                        Button(
+                            onClick = {
+                                onDeleteAction(action.uid)
+                                onDismissRequest()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Red
+                            )
+                        ) {
+                            Text("Delete")
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+
                     Button(
                         onClick = {
                             if (description.value.isEmpty() || equation.value.isEmpty()) {
@@ -110,9 +129,10 @@ fun AddActionDialog(
 
                             onAddAction(
                                 Action(
-                                    description = description.value,
-                                    equation = equation.value,
-                                    tags = tags.value.replace(" ", "").split(",", ";", "\n")
+                                    action?.uid,
+                                    description.value,
+                                    equation.value,
+                                    tags.value.replace(" ", "").split(",", ";", "\n")
                                 )
                             )
                             onDismissRequest()

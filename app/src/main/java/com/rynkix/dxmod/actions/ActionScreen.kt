@@ -4,6 +4,7 @@ import android.graphics.Rect
 import android.widget.Space
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
@@ -92,7 +93,7 @@ fun ActionScreen(
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
-            RoundedSearchBar()
+            // RoundedSearchBar()
 
             if (uiState.actions.isEmpty()) {
                 Row(
@@ -115,7 +116,11 @@ fun ActionScreen(
                     state = rememberLazyListState()
                 ) {
                     items(uiState.actions) { action ->
-                        ActionItem(action)
+                        ActionItem(
+                            action,
+                            viewModel::addAction,
+                            viewModel::deleteAction
+                        )
                         Spacer(modifier = Modifier.height(4.dp))
                     }
                 }
@@ -139,26 +144,32 @@ fun ActionItem(
         description = "Quarterstaff",
         equation = "1d8 + 5",
         tags = listOf("attack", "melee", "action")
-    )
+    ),
+    onUpdateAction: (Action) -> Unit = {},
+    onDeleteAction: (Int) -> Unit = {}
 ) {
     val context = LocalContext.current
     var toast: Toast? = remember { Toast(context) }
+    val showDialog = remember { mutableStateOf(false) }
 
-    Button(
-        onClick = {
-            toast?.cancel()
-            toast = Toast.makeText(
-                context,
-                DiceRoller().ExecuteRoll(action.equation).toString(),
-                Toast.LENGTH_LONG)
-            toast?.show()
-        },
-        modifier = Modifier.fillMaxSize(),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent,
-            contentColor = Color.Black
-        ),
-        contentPadding = PaddingValues(),
+    Surface(
+        modifier = Modifier
+            .combinedClickable(
+                onClick = {
+                    toast?.cancel()
+                    toast = Toast.makeText(
+                        context,
+                        DiceRoller().ExecuteRoll(action.equation).toString(),
+                        Toast.LENGTH_LONG
+                    )
+                    toast?.show()
+
+                },
+                onLongClick = {
+                    showDialog.value = true
+                }
+            )
+            .fillMaxSize(),
         shape = RectangleShape
     ) {
         Row(
@@ -193,6 +204,15 @@ fun ActionItem(
 
             }
         }
+    }
+
+    if (showDialog.value) {
+        AddActionDialog(
+            action = action,
+            onAddAction = onUpdateAction,
+            onDismissRequest = { showDialog.value = false },
+            onDeleteAction = onDeleteAction
+        )
     }
 }
 

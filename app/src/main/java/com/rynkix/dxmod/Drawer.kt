@@ -11,18 +11,24 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.rynkix.dxmod.ui.theme.GreenGrey40
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
 fun DrawerContent(drawerState: DrawerState, navController: NavHostController) {
     val coroutineScope = rememberCoroutineScope()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
 
     ModalDrawerSheet {
         Column(
@@ -41,7 +47,10 @@ fun DrawerContent(drawerState: DrawerState, navController: NavHostController) {
             // Text("Section 1", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
             NavigationDrawerItem(
                 label = { Text("Chat") },
-                selected = false,
+                selected = navBackStackEntry?.destination?.hasRoute(Roller::class) ?: false,
+                colors = NavigationDrawerItemDefaults.colors(
+                    selectedContainerColor = GreenGrey40
+                ),
                 onClick = {
                     navController.navigate(route = Roller)
 
@@ -52,7 +61,10 @@ fun DrawerContent(drawerState: DrawerState, navController: NavHostController) {
             )
             NavigationDrawerItem(
                 label = { Text("Actions") },
-                selected = false,
+                selected = navBackStackEntry?.destination?.hasRoute(Actions::class) ?: false,
+                colors = NavigationDrawerItemDefaults.colors(
+                    selectedContainerColor = GreenGrey40
+                ),
                 onClick = {
                     navController.navigate(route = Actions)
 
